@@ -424,36 +424,44 @@ function computeRisk(text, ingredientMatches, traceMatches) {
   return { pct: Math.min(100, Math.round(pct)), level, reasons };
 }
 
+const GAUGE_ARC_LEN = 263.9; // length of the semicircle path below
+
 function gaugeHtml(pct, level) {
-  const label = level === "danger" ? "DANGEROUS for you"
-    : level === "warning" ? "RISKY — be careful"
+  const label = level === "danger" ? "Dangerous for you"
+    : level === "warning" ? "Risky — be careful"
     : "Low risk for you";
+  const finalOffset = (GAUGE_ARC_LEN * (1 - pct / 100)).toFixed(1);
   return `
-    <div class="gauge">
-      <div class="gauge-top">
+    <div class="gauge" role="img" aria-label="Danger level ${pct} percent — ${label}">
+      <svg class="gauge-svg" viewBox="0 0 200 116" aria-hidden="true">
+        <path class="gauge-track" d="M16 104 A 84 84 0 0 1 184 104"></path>
+        <path class="gauge-arc" d="M16 104 A 84 84 0 0 1 184 104"
+          style="stroke-dasharray:${GAUGE_ARC_LEN};stroke-dashoffset:${GAUGE_ARC_LEN}"
+          data-final="${finalOffset}"></path>
+      </svg>
+      <div class="gauge-center">
         <span class="gauge-pct" data-target="${pct}">0%</span>
         <span class="gauge-label">${label}</span>
       </div>
-      <div class="gauge-bar"><span class="gauge-needle" style="left:0%"></span></div>
-      <div class="gauge-scale"><span>0% safe</span><span>50%</span><span>100% danger</span></div>
+      <div class="gauge-scale"><span>Safe</span><span>Danger</span></div>
     </div>`;
 }
 
-/* Animate the needle and the % counting up after the gauge is in the DOM */
+/* Sweep the dial and count the % up after the gauge is in the DOM */
 function animateGauge(container) {
   const pctEl = container.querySelector(".gauge-pct");
-  const needle = container.querySelector(".gauge-needle");
-  if (!pctEl || !needle) return;
+  const arc = container.querySelector(".gauge-arc");
+  if (!pctEl || !arc) return;
   const target = parseInt(pctEl.dataset.target, 10);
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduced) {
     pctEl.textContent = target + "%";
-    needle.style.left = target + "%";
+    arc.style.strokeDashoffset = arc.dataset.final;
     return;
   }
-  requestAnimationFrame(() => { needle.style.left = target + "%"; });
+  requestAnimationFrame(() => { arc.style.strokeDashoffset = arc.dataset.final; });
   const t0 = performance.now();
-  const dur = 600;
+  const dur = 700;
   const tick = (t) => {
     const p = Math.min(1, (t - t0) / dur);
     pctEl.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))) + "%";
