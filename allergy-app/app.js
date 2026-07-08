@@ -610,6 +610,171 @@ async function lookupBarcode(code) {
   }
 }
 
+/* ============ Photo-of-food recognition (TensorFlow.js MobileNet) ============ */
+
+/* Foods the on-device vision model can recognize → their typical allergens.
+   Keys match MobileNet/ImageNet class names (first synonym, lowercase). */
+const VISION_FOODS = {
+  "cheeseburger": { name: "Cheeseburger", emoji: "🍔", allergens: ["wheat", "milk", "sesame", "egg", "soy", "mustard"] },
+  "hotdog": { name: "Hot dog", emoji: "🌭", allergens: ["wheat", "mustard", "soy"] },
+  "pizza": { name: "Pizza", emoji: "🍕", allergens: ["wheat", "milk"] },
+  "carbonara": { name: "Pasta carbonara", emoji: "🍝", allergens: ["wheat", "egg", "milk"] },
+  "ice cream": { name: "Ice cream", emoji: "🍨", allergens: ["milk", "egg"] },
+  "ice lolly": { name: "Ice pop", emoji: "🍧", allergens: [] },
+  "trifle": { name: "Trifle", emoji: "🍰", allergens: ["milk", "egg", "wheat"] },
+  "chocolate sauce": { name: "Chocolate sauce", emoji: "🍫", allergens: ["milk", "soy"] },
+  "bagel": { name: "Bagel", emoji: "🥯", allergens: ["wheat", "sesame", "egg"] },
+  "pretzel": { name: "Pretzel", emoji: "🥨", allergens: ["wheat"] },
+  "french loaf": { name: "Bread / baguette", emoji: "🥖", allergens: ["wheat"] },
+  "dough": { name: "Dough / pastry", emoji: "🥟", allergens: ["wheat", "egg", "milk"] },
+  "meat loaf": { name: "Meatloaf", emoji: "🍖", allergens: ["wheat", "egg", "milk"] },
+  "potpie": { name: "Pot pie", emoji: "🥧", allergens: ["wheat", "milk", "egg", "celery"] },
+  "burrito": { name: "Burrito", emoji: "🌯", allergens: ["wheat", "milk"] },
+  "guacamole": { name: "Guacamole", emoji: "🥑", allergens: [] },
+  "mashed potato": { name: "Mashed potato", emoji: "🥔", allergens: ["milk"] },
+  "eggnog": { name: "Eggnog", emoji: "🥛", allergens: ["egg", "milk"] },
+  "espresso": { name: "Espresso", emoji: "☕", allergens: [] },
+  "red wine": { name: "Red wine", emoji: "🍷", allergens: ["sulphite"] },
+  "consomme": { name: "Consommé / clear soup", emoji: "🍲", allergens: ["celery", "egg"] },
+  "hot pot": { name: "Hot pot", emoji: "🍲", allergens: ["fish", "shellfish", "soy"] },
+  "banana": { name: "Banana", emoji: "🍌", allergens: [] },
+  "strawberry": { name: "Strawberry", emoji: "🍓", allergens: [] },
+  "orange": { name: "Orange", emoji: "🍊", allergens: [] },
+  "lemon": { name: "Lemon", emoji: "🍋", allergens: [] },
+  "fig": { name: "Fig", emoji: "🫒", allergens: [] },
+  "pineapple": { name: "Pineapple", emoji: "🍍", allergens: [] },
+  "granny smith": { name: "Apple", emoji: "🍏", allergens: [] },
+  "pomegranate": { name: "Pomegranate", emoji: "🍎", allergens: [] },
+  "jackfruit": { name: "Jackfruit", emoji: "🍈", allergens: [] },
+  "custard apple": { name: "Custard apple", emoji: "🍈", allergens: [] },
+  "broccoli": { name: "Broccoli", emoji: "🥦", allergens: [] },
+  "cauliflower": { name: "Cauliflower", emoji: "🥦", allergens: [] },
+  "cucumber": { name: "Cucumber", emoji: "🥒", allergens: [] },
+  "bell pepper": { name: "Bell pepper", emoji: "🫑", allergens: [] },
+  "mushroom": { name: "Mushroom", emoji: "🍄", allergens: [] },
+  "artichoke": { name: "Artichoke", emoji: "🥬", allergens: [] },
+  "zucchini": { name: "Zucchini", emoji: "🥒", allergens: [] },
+  "corn": { name: "Corn", emoji: "🌽", allergens: [] }
+};
+
+let visionModel = null;
+let visionLoading = null;
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error("load failed: " + src));
+    document.head.appendChild(s);
+  });
+}
+
+async function loadVision() {
+  if (visionModel) return visionModel;
+  if (visionLoading) return visionLoading;
+  visionLoading = (async () => {
+    if (!window.mobilenet) {
+      if (!window.tf) await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4/dist/tf.min.js");
+      await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2/dist/mobilenet.min.js");
+    }
+    visionModel = await window.mobilenet.load();
+    return visionModel;
+  })();
+  try {
+    return await visionLoading;
+  } catch (e) {
+    visionLoading = null;
+    throw e;
+  }
+}
+
+function matchVisionFood(className) {
+  for (const part of className.toLowerCase().split(",")) {
+    const key = part.trim();
+    if (VISION_FOODS[key]) return VISION_FOODS[key];
+  }
+  return null;
+}
+
+function fileToImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => resolve(img);
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("bad image")); };
+    img.src = url;
+  });
+}
+
+function showDishResult(food, confidence, alternates) {
+  const result = $("scan-result");
+  const mySet = new Set(profile.selected);
+  const hits = food.allergens.filter(a => mySet.has(a));
+  const pct = hits.length
+    ? Math.min(95, 85 + (hits.length - 1) * 5)
+    : food.allergens.length ? 8 : 3;
+  const level = pct >= 75 ? "danger" : pct >= 25 ? "warning" : "safe";
+  const heading = level === "danger" ? "⛔ Don't eat this"
+    : "✅ Usually fine for your profile";
+
+  const reasons = hits.length
+    ? hits.map(h => `${food.name} usually contains ${ALLERGENS[h].label.toLowerCase()}`)
+    : food.allergens.length
+      ? [`${food.name} typically contains ${food.allergens.map(a => ALLERGENS[a].label.toLowerCase()).join(", ")} — none of your allergens, but recipes vary`]
+      : [`${food.name} is typically free of the major allergens`];
+
+  result.className = `result ${level}`;
+  result.innerHTML = `
+    <div class="product-name">${food.emoji} Looks like: <strong>${food.name}</strong>
+      <span class="confidence">(${Math.round(confidence * 100)}% sure)</span></div>
+    ${gaugeHtml(pct, level)}
+    <h3>${heading}</h3>
+    <ul>${reasons.map(r => `<li>${escapeHtml(r)}</li>`).join("")}</ul>
+    ${alternates.length ? `<p class="fine-print">Not ${food.name.toLowerCase()}? It might also be: ${alternates.map(escapeHtml).join(", ")}.</p>` : ""}
+    <p class="fine-print">This is a guess from a photo — the actual recipe decides what's really in it.
+    If your allergy is severe, confirm the ingredients with the cook or the label.</p>`;
+  result.classList.remove("hidden");
+  animateGauge(result);
+  addHistory({ name: `${food.emoji} ${food.name} (photo)`, pct, level, at: Date.now() });
+  result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+async function scanDishPhoto(file) {
+  if (!file) return;
+  setBarcodeStatus("Loading food recognizer (first time downloads ~17 MB)…");
+  let model;
+  try {
+    model = await loadVision();
+  } catch (e) {
+    setBarcodeStatus("Couldn't load the food recognizer (no internet, or blocked in this preview). Search the Food lookup tab instead.", true);
+    return;
+  }
+  try {
+    setBarcodeStatus("Looking at your food…");
+    const img = await fileToImage(file);
+    const predictions = await model.classify(img, 5);
+    URL.revokeObjectURL(img.src);
+
+    const recognized = [];
+    for (const p of predictions) {
+      const food = matchVisionFood(p.className);
+      if (food) recognized.push({ food, probability: p.probability });
+    }
+    if (!recognized.length || predictions[0].probability < 0.05) {
+      const guesses = predictions.slice(0, 3).map(p => p.className.split(",")[0]).join(", ");
+      setBarcodeStatus(`Couldn't recognize a dish I know (saw: ${guesses}). Try the Food lookup tab or photograph the ingredient label instead.`, true);
+      return;
+    }
+    const best = recognized[0];
+    const alternates = recognized.slice(1, 3).map(r => `${r.food.emoji} ${r.food.name}`);
+    setBarcodeStatus("");
+    showDishResult(best.food, best.probability, alternates);
+  } catch (e) {
+    setBarcodeStatus("Couldn't analyze that photo — try a clearer shot of the food.", true);
+  }
+}
+
 /* ============ Photo-of-label OCR (Tesseract.js, loaded on demand) ============ */
 let tesseractLoading = null;
 
@@ -794,6 +959,11 @@ function init() {
   $("photo-btn").addEventListener("click", () => $("photo-input").click());
   $("photo-input").addEventListener("change", e => {
     scanLabelPhoto(e.target.files[0]);
+    e.target.value = "";
+  });
+  $("dish-btn").addEventListener("click", () => $("dish-input").click());
+  $("dish-input").addEventListener("change", e => {
+    scanDishPhoto(e.target.files[0]);
     e.target.value = "";
   });
   $("clear-history-btn").addEventListener("click", clearHistory);

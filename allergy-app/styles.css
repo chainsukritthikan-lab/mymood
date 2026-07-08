@@ -361,6 +361,7 @@ textarea {
 .result.warning .gauge-pct, .result.warning .gauge-label { color: var(--amber); }
 .result.safe .gauge-pct, .result.safe .gauge-label { color: var(--green-dark); }
 .product-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
+.confidence { color: var(--muted); font-weight: 400; font-size: 0.82rem; }
 
 .result { margin-top: 16px; border-radius: 12px; padding: 16px; }
 .result.danger { background: var(--red-light); border: 1px solid var(--red); }

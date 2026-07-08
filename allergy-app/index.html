@@ -58,12 +58,14 @@
     <!-- ---- TAB: Ingredient scanner ---- -->
     <section id="tab-scan" class="tab-panel">
       <div class="card">
-        <h2>Scan the product</h2>
-        <p class="muted">Scan the barcode to fetch ingredients from the Open Food Facts database, or take a photo of the ingredient label and we'll read it for you.</p>
+        <h2>Scan your food</h2>
+        <p class="muted">Photograph the dish itself and we'll recognize it, scan the barcode to fetch ingredients from the Open Food Facts database, or photograph the ingredient label and we'll read it.</p>
         <div class="scan-buttons">
+          <button id="dish-btn" class="secondary-btn">🍽️ Photo of food</button>
           <button id="camera-btn" class="secondary-btn">📷 Scan barcode</button>
           <button id="photo-btn" class="secondary-btn">🔍 Photo of label</button>
           <input type="file" id="photo-input" accept="image/*" capture="environment" hidden>
+          <input type="file" id="dish-input" accept="image/*" capture="environment" hidden>
         </div>
         <div class="barcode-row">
           <input type="text" id="barcode-input" inputmode="numeric" placeholder="…or type barcode number">
