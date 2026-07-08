@@ -127,6 +127,20 @@ const FOODS = [
   { name: "Tom kha gai", allergens: ["fish"] },
   { name: "Khao man gai", allergens: ["soy", "fish"] },
   { name: "Mango sticky rice", allergens: [] },
+  { name: "Khao soi", allergens: ["wheat", "egg", "fish"] },
+  { name: "Pad see ew", allergens: ["soy", "wheat", "egg", "fish"] },
+  { name: "Laab (larb)", allergens: ["fish"] },
+  { name: "Pho", allergens: ["fish"] },
+  { name: "Tempura", allergens: ["wheat", "egg"] },
+  { name: "Chicken katsu", allergens: ["wheat", "egg", "milk"] },
+  { name: "Dim sum (typical basket)", allergens: ["wheat", "shellfish", "soy", "sesame", "egg"] },
+  { name: "Club sandwich", allergens: ["wheat", "egg", "milk", "mustard"] },
+  { name: "Greek salad", allergens: ["milk"] },
+  { name: "Fried chicken", allergens: ["wheat", "egg", "milk", "soy"] },
+  { name: "Brownie", allergens: ["wheat", "egg", "milk", "treenut", "soy"] },
+  { name: "Croissant", allergens: ["wheat", "milk", "egg"] },
+  { name: "Fruit smoothie", allergens: ["milk"] },
+  { name: "Tacos", allergens: ["wheat", "milk"] },
   { name: "Green curry", allergens: ["shellfish", "fish"] },
   { name: "Tom yum soup", allergens: ["shellfish", "fish"] },
   { name: "Fried rice", allergens: ["egg", "soy", "wheat", "fish"] },
@@ -181,6 +195,94 @@ const OFF_TAG_MAP = {
 const TRACE_RE = /may contain|traces of|produced in a (factory|facility)|same (factory|facility|equipment|line)|cross[- ]?contamination/i;
 
 const STORAGE_KEY = "allergyguard-profile-v1";
+
+/* ---- Thai names for the chef card ---- */
+const TH_NAMES = {
+  peanut: "ถั่วลิสง",
+  treenut: "ถั่วเปลือกแข็ง (อัลมอนด์ เม็ดมะม่วงฯ วอลนัท)",
+  milk: "นมและผลิตภัณฑ์จากนม",
+  egg: "ไข่",
+  fish: "ปลา (รวมน้ำปลา)",
+  shellfish: "กุ้ง ปู (รวมกะปิ)",
+  mollusc: "หอยและปลาหมึก (รวมซอสหอยนางรม)",
+  wheat: "แป้งสาลี / กลูเตน",
+  soy: "ถั่วเหลือง (รวมซีอิ๊ว เต้าหู้)",
+  sesame: "งา",
+  mustard: "มัสตาร์ด",
+  celery: "ขึ้นฉ่าย",
+  lupin: "ลูพิน",
+  sulphite: "ซัลไฟต์ (สารกันบูด)"
+};
+
+/* ============ Chef card ============ */
+const CARD_KEY = "allergyguard-card-v1";
+
+function loadCardContact() {
+  try { return JSON.parse(localStorage.getItem(CARD_KEY)) || {}; }
+  catch (e) { return {}; }
+}
+
+function saveCardContact() {
+  try {
+    localStorage.setItem(CARD_KEY, JSON.stringify({
+      name: $("contact-name").value.trim(),
+      phone: $("contact-phone").value.trim()
+    }));
+  } catch (e) { /* storage blocked */ }
+  renderChefCard();
+}
+
+function renderChefCard() {
+  const card = $("chef-card");
+  if (!card) return;
+  const contact = loadCardContact();
+  const items = profile.selected.map(k =>
+    `<li><span class="cc-emoji">${ALLERGENS[k].emoji}</span>
+      <span class="cc-en">${ALLERGENS[k].label}</span>
+      <span class="cc-th">${TH_NAMES[k] || ""}</span></li>`)
+    .concat(profile.custom.map(c =>
+      `<li><span class="cc-emoji">⚠️</span><span class="cc-en">${escapeHtml(c)}</span><span class="cc-th"></span></li>`));
+
+  card.innerHTML = `
+    <div class="cc-header">
+      <div class="cc-title">⚠️ FOOD ALLERGY ALERT</div>
+      <div class="cc-title-th">แจ้งเตือน: แพ้อาหารรุนแรง</div>
+    </div>
+    <div class="cc-body">
+      <p class="cc-lead">I have a severe food allergy to:<br>
+        <span class="cc-lead-th">ฉันมีอาการแพ้อาหารรุนแรงต่อ:</span></p>
+      <ul class="cc-list">${items.join("")}</ul>
+      <p class="cc-note">Please make sure my food contains none of these — including sauces, oils, and traces from shared pans or fryers. This can be life-threatening.<br>
+        <span class="cc-note-th">กรุณาตรวจสอบว่าอาหารของฉันไม่มีส่วนผสมเหล่านี้ รวมถึงซอส น้ำมัน และการปนเปื้อนจากภาชนะที่ใช้ร่วมกัน — อาจเป็นอันตรายถึงชีวิต</span></p>
+      ${contact.name || contact.phone ? `
+      <p class="cc-contact">🚨 Emergency / ฉุกเฉิน: <strong>${escapeHtml(contact.name || "")}</strong> ${escapeHtml(contact.phone || "")}</p>` : ""}
+      <p class="cc-thanks">Thank you 🙏 ขอบคุณ</p>
+    </div>`;
+}
+
+function toggleCardFullscreen() {
+  $("chef-card").classList.toggle("fullscreen");
+  document.body.style.overflow = $("chef-card").classList.contains("fullscreen") ? "hidden" : "";
+}
+
+/* ============ Share & haptics ============ */
+function buzzDanger() {
+  if (navigator.vibrate) { try { navigator.vibrate([120, 60, 120]); } catch (e) { /* unsupported */ } }
+}
+
+function shareButtonHtml() {
+  return (navigator.share) ? `<button class="share-btn" id="share-result-btn">📤 Share this result</button>` : "";
+}
+
+function wireShareButton(summary) {
+  const btn = $("share-result-btn");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    try {
+      await navigator.share({ title: "AllergyGuard", text: summary + "\n\nChecked with AllergyGuard 🛡️" });
+    } catch (e) { /* user cancelled */ }
+  });
+}
 
 /* ============ Monetization ============
    Free plan: N scans per day (dish photo, barcode, label photo).
@@ -419,6 +521,7 @@ function openProfileEditor() {
   editingCustom = [...profile.custom];
   renderAllergenGrid();
   renderCustomList();
+  $("welcome-screen").classList.add("hidden");
   profileScreen.classList.remove("hidden");
   mainScreen.classList.add("hidden");
 }
@@ -435,11 +538,13 @@ function commitProfile() {
 
 /* ============ Main screen ============ */
 function showMain() {
+  $("welcome-screen").classList.add("hidden");
   profileScreen.classList.add("hidden");
   mainScreen.classList.remove("hidden");
   renderProfileSummary();
   renderFoodList($("food-search").value);
   renderLearnList();
+  renderChefCard();
   $("scan-result").classList.add("hidden");
 }
 
@@ -685,14 +790,18 @@ function checkIngredients(extra = null) {
     <ul>${risk.reasons.map(r => `<li>${escapeHtml(r)}</li>`).join("")}</ul>
     ${text && allTerms.length ? `<p class="fine-print">Highlighted in the label: <br>${highlightTerms(text, allTerms)}</p>` : ""}
     <p class="fine-print">The % is an estimate from the label text${extra ? " and the Open Food Facts database" : ""} —
-    labels can be wrong or incomplete. If your allergy is severe, treat anything above 0% with care.</p>`;
+    labels can be wrong or incomplete. If your allergy is severe, treat anything above 0% with care.</p>
+    ${shareButtonHtml()}`;
   result.classList.remove("hidden");
   animateGauge(result);
+  if (risk.level === "danger") buzzDanger();
+  wireShareButton(`${extra?.productName ? extra.productName + ": " : ""}${risk.pct}% danger — ${heading.replace(/^[^\s]+\s/, "")}`);
   addHistory({
     name: extra?.productName || text.slice(0, 60) + (text.length > 60 ? "…" : ""),
     pct: risk.pct,
     level: risk.level,
-    at: Date.now()
+    at: Date.now(),
+    text: extra ? "" : text
   });
   result.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -727,12 +836,19 @@ function renderHistory() {
   list.innerHTML = "";
   for (const e of h) {
     const row = document.createElement("div");
-    row.className = `history-item ${e.level}`;
+    row.className = `history-item ${e.level}` + (e.text ? " rerunnable" : "");
     const when = new Date(e.at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
     row.innerHTML = `
       <span class="history-pct">${e.pct}%</span>
       <span class="history-name">${escapeHtml(e.name)}</span>
       <span class="history-time">${when}</span>`;
+    if (e.text) {
+      row.title = "Tap to check again";
+      row.addEventListener("click", () => {
+        $("ingredient-input").value = e.text;
+        checkIngredients();
+      });
+    }
     list.appendChild(row);
   }
 }
@@ -897,9 +1013,12 @@ function showDishResult(food, confidence, alternates) {
     <ul>${reasons.map(r => `<li>${escapeHtml(r)}</li>`).join("")}</ul>
     ${alternates.length ? `<p class="fine-print">Not ${food.name.toLowerCase()}? It might also be: ${alternates.map(escapeHtml).join(", ")}.</p>` : ""}
     <p class="fine-print">This is a guess from a photo — the actual recipe decides what's really in it.
-    If your allergy is severe, confirm the ingredients with the cook or the label.</p>`;
+    If your allergy is severe, confirm the ingredients with the cook or the label.</p>
+    ${shareButtonHtml()}`;
   result.classList.remove("hidden");
   animateGauge(result);
+  if (level === "danger") buzzDanger();
+  wireShareButton(`${food.name}: ${pct}% danger for my allergies`);
   addHistory({ name: `${food.emoji} ${food.name} (photo)`, pct, level, at: Date.now() });
   result.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -1153,12 +1272,41 @@ function init() {
     navigator.serviceWorker.register("sw.js").catch(() => { /* offline mode unavailable */ });
   }
 
+  // Welcome flow + chef card
+  $("welcome-start-btn").addEventListener("click", openProfileEditor);
+  const contact = loadCardContact();
+  $("contact-name").value = contact.name || "";
+  $("contact-phone").value = contact.phone || "";
+  $("contact-name").addEventListener("input", saveCardContact);
+  $("contact-phone").addEventListener("input", saveCardContact);
+  $("chef-card").addEventListener("click", toggleCardFullscreen);
+  $("chef-card").addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleCardFullscreen(); }
+    if (e.key === "Escape") $("chef-card").classList.remove("fullscreen");
+  });
+
+  // Install-app prompt (Android/desktop Chrome)
+  let installEvent = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    installEvent = e;
+    $("install-btn").classList.remove("hidden");
+  });
+  $("install-btn").addEventListener("click", async () => {
+    if (!installEvent) return;
+    installEvent.prompt();
+    await installEvent.userChoice;
+    installEvent = null;
+    $("install-btn").classList.add("hidden");
+  });
+
   const saved = loadProfile();
   if (saved) {
     profile = saved;
     showMain();
   } else {
-    openProfileEditor();
+    $("welcome-screen").classList.remove("hidden");
+    profileScreen.classList.add("hidden");
   }
 }
 

@@ -22,9 +22,25 @@
     </div>
     <div class="header-actions">
       <span id="pro-badge" class="pro-badge hidden">⭐ PRO</span>
+      <button id="install-btn" class="ghost-btn hidden" title="Install AllergyGuard">📲 Install</button>
       <button id="edit-profile-btn" class="ghost-btn" title="Edit my allergies">⚙️ My allergies</button>
     </div>
   </header>
+
+  <!-- ============ WELCOME (first run) ============ -->
+  <section id="welcome-screen" class="screen hidden">
+    <div class="card welcome-card">
+      <div class="welcome-shield">🛡️</div>
+      <h2>Eat without fear</h2>
+      <p class="muted">AllergyGuard checks any food against <em>your</em> allergies — in seconds.</p>
+      <div class="welcome-steps">
+        <div class="welcome-step"><span class="step-emoji">🍽️</span><div><strong>Scan anything</strong><br>Photograph a dish, a barcode, or an ingredient label.</div></div>
+        <div class="welcome-step"><span class="step-emoji">📊</span><div><strong>Get a danger score</strong><br>0–100%, with the hidden allergen names found.</div></div>
+        <div class="welcome-step"><span class="step-emoji">🪪</span><div><strong>Show your Chef Card</strong><br>A bilingual allergy card for restaurant staff.</div></div>
+      </div>
+      <button id="welcome-start-btn" class="primary-btn">Set up my allergies →</button>
+    </div>
+  </section>
 
   <!-- ============ ONBOARDING / PROFILE ============ -->
   <section id="profile-screen" class="screen">
@@ -53,9 +69,10 @@
     <div id="profile-summary" class="profile-summary"></div>
 
     <nav class="tabs" role="tablist">
-      <button class="tab active" data-tab="scan" role="tab">📋 Check a label</button>
-      <button class="tab" data-tab="foods" role="tab">🍜 Food lookup</button>
-      <button class="tab" data-tab="learn" role="tab">📖 Hidden names</button>
+      <button class="tab active" data-tab="scan" role="tab">📋 Check</button>
+      <button class="tab" data-tab="foods" role="tab">🍜 Foods</button>
+      <button class="tab" data-tab="card" role="tab">🪪 Card</button>
+      <button class="tab" data-tab="learn" role="tab">📖 Hidden</button>
     </nav>
 
     <!-- ---- TAB: Ingredient scanner ---- -->
@@ -106,6 +123,22 @@
         <p class="muted">Typical allergens in popular foods. Recipes vary — always confirm with the cook or the label.</p>
         <input type="search" id="food-search" placeholder="Search foods… (e.g. pad thai, pancake)">
         <div id="food-list" class="food-list"></div>
+      </div>
+    </section>
+
+    <!-- ---- TAB: Chef card ---- -->
+    <section id="tab-card" class="tab-panel hidden">
+      <div class="card">
+        <h2>Your Chef Card</h2>
+        <p class="muted">Show this to restaurant staff — in English and Thai — so the kitchen knows exactly what to avoid. Tap the card to show it full screen.</p>
+        <div id="chef-card" class="chef-card" role="button" tabindex="0" aria-label="Show chef card full screen"></div>
+        <div class="contact-fields">
+          <label for="contact-name">Emergency contact (shown on the card):</label>
+          <div class="custom-row">
+            <input type="text" id="contact-name" placeholder="Name" maxlength="40">
+            <input type="tel" id="contact-phone" placeholder="Phone" maxlength="20">
+          </div>
+        </div>
       </div>
     </section>
 
