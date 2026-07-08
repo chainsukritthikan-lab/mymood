@@ -143,6 +143,26 @@ const FOODS = [
   { name: "Grilled chicken (plain)", allergens: [] }
 ];
 
+/* Vague label terms that can hide allergens — each adds a little risk */
+const AMBIGUOUS_TERMS = [
+  "natural flavor", "natural flavors", "natural flavour", "natural flavours",
+  "artificial flavor", "artificial flavors", "artificial flavour", "artificial flavours",
+  "spices", "seasoning", "seasonings", "vegetable oil", "vegetable broth",
+  "vegetable protein", "hydrolyzed protein", "hydrolysed protein",
+  "modified starch", "modified food starch", "emulsifier", "emulsifiers"
+];
+
+/* Open Food Facts allergen tags → our allergen keys */
+const OFF_TAG_MAP = {
+  "en:milk": "milk", "en:peanuts": "peanut", "en:nuts": "treenut",
+  "en:eggs": "egg", "en:fish": "fish", "en:crustaceans": "shellfish",
+  "en:molluscs": "mollusc", "en:gluten": "wheat", "en:soybeans": "soy",
+  "en:sesame-seeds": "sesame", "en:mustard": "mustard", "en:celery": "celery",
+  "en:lupin": "lupin", "en:sulphur-dioxide-and-sulphites": "sulphite"
+};
+
+const TRACE_RE = /may contain|traces of|produced in a (factory|facility)|same (factory|facility|equipment|line)|cross[- ]?contamination/i;
+
 const STORAGE_KEY = "allergyguard-profile-v1";
 
 /* ---- State ---- */
@@ -168,7 +188,9 @@ function loadProfile() {
 }
 
 function saveProfile() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+  } catch (e) { /* private browsing or sandbox may block storage — keep profile in memory */ }
 }
 
 function renderAllergenGrid() {
@@ -296,7 +318,79 @@ function findMatches(text) {
 }
 
 function hasTraceWarning(text) {
-  return /may contain|traces of|produced in a (factory|facility)|same (factory|facility|equipment|line)|cross[- ]?contamination/i.test(text);
+  return TRACE_RE.test(text);
+}
+
+/* Split label text into the main ingredient part and the "may contain…" trace part,
+   so an allergen that only appears in the trace warning scores lower than a real ingredient. */
+function splitTraceSection(text) {
+  const m = TRACE_RE.exec(text);
+  if (!m) return { main: text, trace: "" };
+  return { main: text.slice(0, m.index), trace: text.slice(m.index) };
+}
+
+function findAmbiguous(text) {
+  const lower = text.toLowerCase();
+  const found = [];
+  for (const term of AMBIGUOUS_TERMS) {
+    const re = new RegExp(`(^|[^a-z])${escapeRegex(term)}([^a-z]|$)`, "i");
+    if (re.test(lower)) found.push(term);
+  }
+  // drop terms contained in longer matches (e.g. "flavor" inside "natural flavor")
+  return found.filter(t => !found.some(o => o !== t && o.includes(t)));
+}
+
+/* ---- Danger score: 0–100% ----
+   ingredientMatches / traceMatches are findMatches() results for each label section.
+   Returns { pct, level, reasons } — level: danger | warning | safe */
+function computeRisk(text, ingredientMatches, traceMatches) {
+  const genericTrace = hasTraceWarning(text);
+  const ambiguous = findAmbiguous(text);
+  const reasons = [];
+  let pct;
+
+  if (ingredientMatches.length) {
+    // Allergen is an actual ingredient: 90–99%
+    pct = 90 + Math.min(9, (ingredientMatches.length - 1) * 4 + (traceMatches.length ? 2 : 0));
+    for (const m of ingredientMatches)
+      reasons.push(`${m.label} is listed as an ingredient (${m.matchedTerms.join(", ")})`);
+    for (const m of traceMatches)
+      reasons.push(`${m.label} also appears in a "may contain" warning`);
+  } else if (traceMatches.length) {
+    // Only in the trace warning: 55–70%
+    pct = 55 + Math.min(15, (traceMatches.length - 1) * 8 + ambiguous.length * 4);
+    for (const m of traceMatches)
+      reasons.push(`${m.label} appears in a "may contain / traces" warning (${m.matchedTerms.join(", ")})`);
+  } else if (genericTrace) {
+    // Cross-contamination warning that doesn't name your allergen: ~35%
+    pct = 35 + Math.min(10, ambiguous.length * 4);
+    reasons.push(`The label warns about possible cross-contamination`);
+  } else {
+    // Nothing found: 3% base — labels can be incomplete, so never 0
+    pct = 3 + Math.min(22, ambiguous.length * 7);
+    if (ambiguous.length === 0) reasons.push("None of your allergens (or their hidden names) were found");
+  }
+
+  for (const a of ambiguous)
+    reasons.push(`"${a}" is vague — it can hide allergens, ask the maker what's in it`);
+
+  const level = pct >= 75 ? "danger" : pct >= 25 ? "warning" : "safe";
+  return { pct: Math.min(100, Math.round(pct)), level, reasons };
+}
+
+function gaugeHtml(pct, level) {
+  const label = level === "danger" ? "DANGEROUS for you"
+    : level === "warning" ? "RISKY — be careful"
+    : "Low risk for you";
+  return `
+    <div class="gauge">
+      <div class="gauge-top">
+        <span class="gauge-pct">${pct}%</span>
+        <span class="gauge-label">${label}</span>
+      </div>
+      <div class="gauge-bar"><span class="gauge-needle" style="left:${pct}%"></span></div>
+      <div class="gauge-scale"><span>0% safe</span><span>50%</span><span>100% danger</span></div>
+    </div>`;
 }
 
 function highlightTerms(text, terms) {
@@ -310,45 +404,143 @@ function highlightTerms(text, terms) {
   return safe;
 }
 
-function checkIngredients() {
+/* extra = { productName, officialAllergens, officialTraces } from a barcode lookup */
+function checkIngredients(extra = null) {
   const text = $("ingredient-input").value.trim();
   const result = $("scan-result");
-  if (!text) {
+  if (!text && !extra) {
     result.className = "result warning";
-    result.innerHTML = "<h3>Nothing to check</h3><p>Paste or type the ingredient list first.</p>";
+    result.innerHTML = "<h3>Nothing to check</h3><p>Scan a barcode or paste the ingredient list first.</p>";
     result.classList.remove("hidden");
     return;
   }
 
-  const matches = findMatches(text);
-  const trace = hasTraceWarning(text);
-  result.classList.remove("hidden");
+  const { main, trace } = splitTraceSection(text);
+  let ingredientMatches = findMatches(main);
+  let traceMatches = findMatches(trace)
+    .filter(t => !ingredientMatches.some(m => m.label === t.label));
 
-  if (matches.length) {
-    const allTerms = matches.flatMap(m => m.matchedTerms);
-    result.className = "result danger";
-    result.innerHTML = `
-      <h3>⛔ NOT SAFE — contains your allergens</h3>
-      <ul>${matches.map(m =>
-        `<li>${m.label}: found <span class="match-term">${m.matchedTerms.map(escapeHtml).join(", ")}</span></li>`).join("")}
-      </ul>
-      ${trace ? `<p style="margin-top:8px">Plus a <strong>"may contain / traces"</strong> warning was detected.</p>` : ""}
-      <p class="fine-print">Highlighted in your text: <br>${highlightTerms(text, allTerms)}</p>`;
-  } else if (trace) {
-    result.className = "result warning";
-    result.innerHTML = `
-      <h3>⚠️ Caution — possible cross-contamination</h3>
-      <p>No allergen from your profile is listed as an ingredient, but the label has a
-      <strong>"may contain / traces / same facility"</strong> warning. If your allergy is severe, avoid it.</p>`;
-  } else {
-    result.className = "result safe";
-    result.innerHTML = `
-      <h3>✅ Looks clear for your profile</h3>
-      <p>None of your allergens (or their hidden names) were found in this list.</p>
-      <p class="fine-print">Still double-check the real label — this tool can't see typos,
-      missing ingredients, or cross-contamination the label doesn't mention.</p>`;
+  // Merge the database's own allergen declarations from a barcode lookup
+  if (extra) {
+    const mySet = new Set(profile.selected);
+    const addOfficial = (tags, bucket, other) => {
+      for (const tag of tags || []) {
+        const key = OFF_TAG_MAP[tag];
+        if (!key || !mySet.has(key)) continue;
+        const label = `${ALLERGENS[key].emoji} ${ALLERGENS[key].label}`;
+        if (!bucket.some(m => m.label === label) && !other.some(m => m.label === label))
+          bucket.push({ label, matchedTerms: ["declared by product database"] });
+      }
+    };
+    addOfficial(extra.officialAllergens, ingredientMatches, []);
+    addOfficial(extra.officialTraces, traceMatches, ingredientMatches);
   }
+
+  const risk = computeRisk(text, ingredientMatches, traceMatches);
+  const allTerms = [...ingredientMatches, ...traceMatches]
+    .flatMap(m => m.matchedTerms).filter(t => t !== "declared by product database");
+
+  result.className = `result ${risk.level}`;
+  const heading = risk.level === "danger" ? "⛔ Don't eat this"
+    : risk.level === "warning" ? "⚠️ Caution — check before eating"
+    : "✅ Looks clear for your profile";
+
+  result.innerHTML = `
+    ${extra?.productName ? `<div class="product-name">📦 ${escapeHtml(extra.productName)}</div>` : ""}
+    ${gaugeHtml(risk.pct, risk.level)}
+    <h3>${heading}</h3>
+    <ul>${risk.reasons.map(r => `<li>${escapeHtml(r)}</li>`).join("")}</ul>
+    ${text && allTerms.length ? `<p class="fine-print">Highlighted in the label: <br>${highlightTerms(text, allTerms)}</p>` : ""}
+    <p class="fine-print">The % is an estimate from the label text${extra ? " and the Open Food Facts database" : ""} —
+    labels can be wrong or incomplete. If your allergy is severe, treat anything above 0% with care.</p>`;
+  result.classList.remove("hidden");
   result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+/* ============ Barcode lookup (Open Food Facts) ============ */
+function setBarcodeStatus(msg, isError = false) {
+  const el = $("barcode-status");
+  el.textContent = msg;
+  el.className = "barcode-status" + (isError ? " error" : "");
+}
+
+async function lookupBarcode(code) {
+  code = String(code).replace(/\D/g, "");
+  if (code.length < 6) {
+    setBarcodeStatus("That doesn't look like a barcode number — it should be 8–13 digits.", true);
+    return;
+  }
+  setBarcodeStatus(`Looking up ${code}…`);
+  try {
+    const res = await fetch(
+      `https://world.openfoodfacts.org/api/v2/product/${code}.json` +
+      `?fields=product_name,ingredients_text,ingredients_text_en,allergens_tags,traces_tags`);
+    const data = await res.json();
+    if (data.status !== 1 || !data.product) {
+      setBarcodeStatus("Product not found in Open Food Facts. Paste the ingredients from the package instead.", true);
+      return;
+    }
+    const p = data.product;
+    const ingredients = p.ingredients_text_en || p.ingredients_text || "";
+    $("ingredient-input").value = ingredients;
+    setBarcodeStatus(`Found: ${p.product_name || code}${ingredients ? "" : " (no ingredient text in database — using its allergen declarations only)"}`);
+    checkIngredients({
+      productName: p.product_name || `Barcode ${code}`,
+      officialAllergens: p.allergens_tags,
+      officialTraces: p.traces_tags
+    });
+  } catch (e) {
+    setBarcodeStatus("Couldn't reach the product database (no internet, or blocked in this preview). Paste the ingredients from the package instead.", true);
+  }
+}
+
+/* ---- Camera barcode scanning (BarcodeDetector, works on most phones) ---- */
+let cameraStream = null;
+let scanTimer = null;
+
+function stopCamera() {
+  if (scanTimer) { clearInterval(scanTimer); scanTimer = null; }
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  $("camera-wrap").classList.add("hidden");
+}
+
+async function startCamera() {
+  if (!("BarcodeDetector" in window)) {
+    setBarcodeStatus("This browser can't scan barcodes with the camera (try Chrome on Android). Type the barcode number instead.", true);
+    $("barcode-input").focus();
+    return;
+  }
+  try {
+    const detector = new BarcodeDetector({
+      formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128"]
+    });
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" }
+    });
+    const video = $("camera-video");
+    video.srcObject = cameraStream;
+    await video.play();
+    $("camera-wrap").classList.remove("hidden");
+    setBarcodeStatus("Point the camera at the barcode…");
+
+    scanTimer = setInterval(async () => {
+      try {
+        const codes = await detector.detect(video);
+        if (codes.length) {
+          const value = codes[0].rawValue;
+          stopCamera();
+          $("barcode-input").value = value;
+          lookupBarcode(value);
+        }
+      } catch (e) { /* keep scanning */ }
+    }, 400);
+  } catch (e) {
+    stopCamera();
+    setBarcodeStatus("Couldn't open the camera (permission denied or not available). Type the barcode number instead.", true);
+  }
 }
 
 /* ============ Food lookup ============ */
@@ -374,11 +566,14 @@ function renderFoodList(query = "") {
       return `<span class="food-flag ${hit ? "hit" : ""}">${ALLERGENS[a].emoji} ${ALLERGENS[a].label}</span>`;
     }).join("");
 
+    const pct = hits.length
+      ? Math.min(95, 85 + (hits.length - 1) * 5)
+      : f.allergens.length ? 8 : 3;
     const verdict = hits.length
-      ? `<div class="food-verdict bad">⛔ Usually contains: ${hits.map(h => ALLERGENS[h].label).join(", ")} — risky for you</div>`
+      ? `<div class="food-verdict bad">⛔ ~${pct}% danger — usually contains: ${hits.map(h => ALLERGENS[h].label).join(", ")}</div>`
       : f.allergens.length
-        ? `<div class="food-verdict ok">✅ None of your allergens typically — but recipes vary, always ask</div>`
-        : `<div class="food-verdict ok">✅ Typically allergen-free</div>`;
+        ? `<div class="food-verdict ok">✅ ~${pct}% — none of your allergens typically, but recipes vary, always ask</div>`
+        : `<div class="food-verdict ok">✅ ~${pct}% — typically allergen-free</div>`;
 
     item.innerHTML = `<span class="food-name">${f.name}</span>${flags}${verdict}`;
     list.appendChild(item);
@@ -426,8 +621,14 @@ function init() {
   $("custom-input").addEventListener("keydown", e => {
     if (e.key === "Enter") { e.preventDefault(); addCustomAllergen(); }
   });
-  $("check-btn").addEventListener("click", checkIngredients);
+  $("check-btn").addEventListener("click", () => checkIngredients());
   $("food-search").addEventListener("input", e => renderFoodList(e.target.value));
+  $("camera-btn").addEventListener("click", startCamera);
+  $("camera-stop-btn").addEventListener("click", stopCamera);
+  $("barcode-btn").addEventListener("click", () => lookupBarcode($("barcode-input").value));
+  $("barcode-input").addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); lookupBarcode(e.target.value); }
+  });
 
   const saved = loadProfile();
   if (saved) {
@@ -438,4 +639,8 @@ function init() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", init);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}

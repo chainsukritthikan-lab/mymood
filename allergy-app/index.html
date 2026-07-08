@@ -56,10 +56,25 @@
     <!-- ---- TAB: Ingredient scanner ---- -->
     <section id="tab-scan" class="tab-panel">
       <div class="card">
-        <h2>Paste an ingredient list</h2>
+        <h2>Scan a product barcode</h2>
+        <p class="muted">Point your camera at the barcode of a packaged food. We'll fetch its ingredients from the Open Food Facts database and score the danger for you.</p>
+        <div class="barcode-row">
+          <button id="camera-btn" class="secondary-btn">📷 Scan with camera</button>
+          <input type="text" id="barcode-input" inputmode="numeric" placeholder="…or type barcode number">
+          <button id="barcode-btn" class="secondary-btn">Look up</button>
+        </div>
+        <div id="camera-wrap" class="camera-wrap hidden">
+          <video id="camera-video" playsinline muted></video>
+          <button id="camera-stop-btn" class="ghost-btn">✕ Stop camera</button>
+        </div>
+        <div id="barcode-status" class="barcode-status" aria-live="polite"></div>
+      </div>
+
+      <div class="card">
+        <h2>…or paste an ingredient list</h2>
         <p class="muted">Copy the ingredients from a package label (or type what's in a dish) and we'll check it against your allergies.</p>
         <textarea id="ingredient-input" rows="5" placeholder="e.g. Wheat flour, sugar, palm oil, whey powder, soy lecithin, may contain traces of peanuts"></textarea>
-        <button id="check-btn" class="primary-btn">Check ingredients</button>
+        <button id="check-btn" class="primary-btn">Check danger level</button>
         <div id="scan-result" class="result hidden" aria-live="polite"></div>
       </div>
     </section>
