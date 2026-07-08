@@ -7,6 +7,8 @@
   <title>AllergyGuard — Check food for your allergies</title>
   <meta name="description" content="Set up your allergy profile, scan ingredient labels, and look up common foods to stay safe from food allergens.">
   <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
 </head>
 <body>
 
@@ -56,10 +58,14 @@
     <!-- ---- TAB: Ingredient scanner ---- -->
     <section id="tab-scan" class="tab-panel">
       <div class="card">
-        <h2>Scan a product barcode</h2>
-        <p class="muted">Point your camera at the barcode of a packaged food. We'll fetch its ingredients from the Open Food Facts database and score the danger for you.</p>
+        <h2>Scan the product</h2>
+        <p class="muted">Scan the barcode to fetch ingredients from the Open Food Facts database, or take a photo of the ingredient label and we'll read it for you.</p>
+        <div class="scan-buttons">
+          <button id="camera-btn" class="secondary-btn">📷 Scan barcode</button>
+          <button id="photo-btn" class="secondary-btn">🔍 Photo of label</button>
+          <input type="file" id="photo-input" accept="image/*" capture="environment" hidden>
+        </div>
         <div class="barcode-row">
-          <button id="camera-btn" class="secondary-btn">📷 Scan with camera</button>
           <input type="text" id="barcode-input" inputmode="numeric" placeholder="…or type barcode number">
           <button id="barcode-btn" class="secondary-btn">Look up</button>
         </div>
@@ -76,6 +82,14 @@
         <textarea id="ingredient-input" rows="5" placeholder="e.g. Wheat flour, sugar, palm oil, whey powder, soy lecithin, may contain traces of peanuts"></textarea>
         <button id="check-btn" class="primary-btn">Check danger level</button>
         <div id="scan-result" class="result hidden" aria-live="polite"></div>
+      </div>
+
+      <div class="card" id="history-card" hidden>
+        <div class="history-head">
+          <h2>Recent checks</h2>
+          <button id="clear-history-btn" class="ghost-btn">Clear</button>
+        </div>
+        <div id="history-list" class="history-list"></div>
       </div>
     </section>
 

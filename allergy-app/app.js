@@ -6,7 +6,8 @@ const ALLERGENS = {
     label: "Peanuts", emoji: "🥜",
     desc: "A legume, not a true nut — but one of the most severe common allergies.",
     terms: ["peanut", "peanuts", "groundnut", "groundnuts", "arachis", "arachis oil",
-      "beer nuts", "monkey nuts", "goober", "peanut butter", "peanut flour", "satay"]
+      "beer nuts", "monkey nuts", "goober", "peanut butter", "peanut flour", "satay",
+      "ถั่วลิสง", "เนยถั่ว", "สะเต๊ะ"]
   },
   treenut: {
     label: "Tree nuts", emoji: "🌰",
@@ -15,7 +16,8 @@ const ALLERGENS = {
       "hazelnuts", "pecan", "pecans", "pistachio", "pistachios", "macadamia",
       "brazil nut", "brazil nuts", "pine nut", "pine nuts", "chestnut", "chestnuts",
       "praline", "marzipan", "nougat", "frangipane", "gianduja", "nut butter",
-      "nut oil", "nut paste", "tree nut", "tree nuts"]
+      "nut oil", "nut paste", "tree nut", "tree nuts",
+      "อัลมอนด์", "เม็ดมะม่วงหิมพานต์", "วอลนัท", "เฮเซลนัท", "พิสตาชิโอ", "แมคคาเดเมีย"]
   },
   milk: {
     label: "Milk / dairy", emoji: "🥛",
@@ -24,7 +26,8 @@ const ALLERGENS = {
       "cream", "butter", "butterfat", "ghee", "cheese", "yogurt", "yoghurt", "curd",
       "curds", "custard", "casein", "caseinate", "caseinates", "sodium caseinate",
       "whey", "whey protein", "lactose", "lactalbumin", "lactoglobulin", "lactoferrin",
-      "dairy", "half-and-half", "kefir", "paneer", "quark"]
+      "dairy", "half-and-half", "kefir", "paneer", "quark",
+      "นม", "นมผง", "นมวัว", "นมสด", "นมข้น", "หางนม", "เนย", "ชีส", "โยเกิร์ต", "ครีม", "เวย์"]
   },
   egg: {
     label: "Eggs", emoji: "🥚",
@@ -32,7 +35,8 @@ const ALLERGENS = {
     terms: ["egg", "eggs", "egg white", "egg whites", "egg yolk", "egg yolks",
       "egg powder", "dried egg", "albumin", "albumen", "ovalbumin", "ovomucoid",
       "ovomucin", "ovoglobulin", "lysozyme", "mayonnaise", "mayo", "meringue",
-      "aioli", "eggnog", "globulin", "livetin", "vitellin"]
+      "aioli", "eggnog", "globulin", "livetin", "vitellin",
+      "ไข่", "ไข่ขาว", "ไข่แดง", "ไข่ผง", "มายองเนส"]
   },
   fish: {
     label: "Fish", emoji: "🐟",
@@ -40,14 +44,16 @@ const ALLERGENS = {
     terms: ["fish", "anchovy", "anchovies", "cod", "salmon", "tuna", "haddock",
       "halibut", "mackerel", "sardine", "sardines", "tilapia", "trout", "bass",
       "fish sauce", "fish oil", "fish stock", "fish paste", "worcestershire",
-      "surimi", "caviar", "roe", "nam pla", "furikake", "bonito", "dashi", "katsuobushi"]
+      "surimi", "caviar", "roe", "nam pla", "furikake", "bonito", "dashi", "katsuobushi",
+      "ปลา", "น้ำปลา", "ปลาร้า", "ปลากรอบ", "ปลาป่น", "ซอสปลา"]
   },
   shellfish: {
     label: "Crustaceans", emoji: "🦐",
     desc: "Shrimp, prawn, crab, lobster, crayfish — and shrimp paste in many Asian sauces.",
     terms: ["shrimp", "prawn", "prawns", "crab", "lobster", "crayfish", "crawfish",
       "krill", "scampi", "langoustine", "shellfish", "crustacean", "crustaceans",
-      "shrimp paste", "belacan", "kapi", "tom yum paste"]
+      "shrimp paste", "belacan", "kapi", "tom yum paste",
+      "กุ้ง", "กุ้งแห้ง", "ปู", "กะปิ", "ล็อบสเตอร์"]
   },
   mollusc: {
     label: "Molluscs", emoji: "🦪",
@@ -55,7 +61,8 @@ const ALLERGENS = {
     terms: ["clam", "clams", "mussel", "mussels", "oyster", "oysters", "scallop",
       "scallops", "squid", "calamari", "octopus", "snail", "snails", "escargot",
       "abalone", "whelk", "cockle", "cockles", "mollusc", "molluscs", "mollusk",
-      "mollusks", "oyster sauce", "cuttlefish"]
+      "mollusks", "oyster sauce", "cuttlefish",
+      "หอย", "หอยนางรม", "ปลาหมึก", "หมึก", "ซอสหอยนางรม"]
   },
   wheat: {
     label: "Wheat / gluten", emoji: "🌾",
@@ -63,7 +70,8 @@ const ALLERGENS = {
     terms: ["wheat", "wheat flour", "whole wheat", "gluten", "semolina", "durum",
       "spelt", "farro", "einkorn", "emmer", "kamut", "couscous", "bulgur", "bran",
       "farina", "graham", "seitan", "malt", "malt extract", "malt vinegar",
-      "barley", "rye", "triticale", "breadcrumbs", "panko", "soy sauce", "udon", "orzo"]
+      "barley", "rye", "triticale", "breadcrumbs", "panko", "soy sauce", "udon", "orzo",
+      "แป้งสาลี", "ข้าวสาลี", "กลูเตน", "ซีอิ๊ว", "เกล็ดขนมปัง", "บะหมี่"]
   },
   soy: {
     label: "Soy", emoji: "🫘",
@@ -71,31 +79,33 @@ const ALLERGENS = {
     terms: ["soy", "soya", "soybean", "soybeans", "soy sauce", "soy protein",
       "soy flour", "soy lecithin", "lecithin", "e322", "edamame", "tofu", "tempeh",
       "miso", "natto", "tamari", "textured vegetable protein", "tvp",
-      "hydrolyzed vegetable protein", "hvp", "okara", "yuba"]
+      "hydrolyzed vegetable protein", "hvp", "okara", "yuba",
+      "ถั่วเหลือง", "เต้าหู้", "เต้าเจี้ยว", "ซีอิ๊ว", "โปรตีนถั่วเหลือง", "เลซิติน", "มิโซะ"]
   },
   sesame: {
     label: "Sesame", emoji: "🫓",
     desc: "Hides as tahini, benne, gingelly oil, halvah, za'atar, hummus.",
     terms: ["sesame", "sesame seed", "sesame seeds", "sesame oil", "tahini", "tahina",
       "benne", "benne seed", "gingelly", "gingelly oil", "halvah", "halva",
-      "za'atar", "zaatar", "hummus", "houmous", "gomashio", "furikake"]
+      "za'atar", "zaatar", "hummus", "houmous", "gomashio", "furikake",
+      "งาขาว", "งาดำ", "เมล็ดงา", "น้ำมันงา", "งาคั่ว"]
   },
   mustard: {
     label: "Mustard", emoji: "🌭",
     desc: "In dressings, curry powder, mayonnaise, pickles and many spice blends.",
     terms: ["mustard", "mustard seed", "mustard seeds", "mustard flour", "mustard oil",
-      "dijon", "wasabi powder", "curry powder", "piccalilli"]
+      "dijon", "wasabi powder", "curry powder", "piccalilli", "มัสตาร์ด", "ผงกะหรี่"]
   },
   celery: {
     label: "Celery", emoji: "🥬",
     desc: "Includes celeriac, celery salt, celery seed — common in stocks and soups.",
     terms: ["celery", "celeriac", "celery salt", "celery seed", "celery seeds",
-      "celery extract", "celery leaf", "celery root"]
+      "celery extract", "celery leaf", "celery root", "ขึ้นฉ่าย", "คื่นช่าย"]
   },
   lupin: {
     label: "Lupin", emoji: "🌼",
     desc: "A legume flour used in some breads, pasta and gluten-free products.",
-    terms: ["lupin", "lupine", "lupini", "lupin flour", "lupin bean", "lupin beans"]
+    terms: ["lupin", "lupine", "lupini", "lupin flour", "lupin bean", "lupin beans", "ลูพิน"]
   },
   sulphite: {
     label: "Sulphites", emoji: "🍷",
@@ -103,13 +113,20 @@ const ALLERGENS = {
     terms: ["sulphite", "sulphites", "sulfite", "sulfites", "sulphur dioxide",
       "sulfur dioxide", "e220", "e221", "e222", "e223", "e224", "e225", "e226",
       "e227", "e228", "sodium metabisulphite", "sodium metabisulfite",
-      "potassium metabisulphite", "sodium sulphite", "sodium bisulphite"]
+      "potassium metabisulphite", "sodium sulphite", "sodium bisulphite",
+      "ซัลไฟต์", "ซัลเฟอร์ไดออกไซด์", "สารกันบูด"]
   }
 };
 
 /* ---- Common foods & their typical allergens ---- */
 const FOODS = [
   { name: "Pad thai", allergens: ["peanut", "fish", "egg", "soy", "shellfish"] },
+  { name: "Som tam (papaya salad)", allergens: ["peanut", "fish", "shellfish"] },
+  { name: "Pad krapow (basil stir-fry)", allergens: ["fish", "soy", "egg"] },
+  { name: "Massaman curry", allergens: ["peanut", "fish"] },
+  { name: "Tom kha gai", allergens: ["fish"] },
+  { name: "Khao man gai", allergens: ["soy", "fish"] },
+  { name: "Mango sticky rice", allergens: [] },
   { name: "Green curry", allergens: ["shellfish", "fish"] },
   { name: "Tom yum soup", allergens: ["shellfish", "fish"] },
   { name: "Fried rice", allergens: ["egg", "soy", "wheat", "fish"] },
@@ -291,6 +308,36 @@ function escapeHtml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/* Thai word segmentation (built into modern browsers) so นม (milk) doesn't
+   false-match inside ขนม (dessert). Falls back to substring matching. */
+const thaiSegmenter = (typeof Intl !== "undefined" && Intl.Segmenter)
+  ? new Intl.Segmenter("th", { granularity: "word" }) : null;
+
+function hasThai(s) { return /[฀-๿]/.test(s); }
+
+function termFoundIn(lower, term) {
+  if (!hasThai(term)) {
+    const re = new RegExp(`(^|[^a-z])${escapeRegex(term)}([^a-z]|$)`, "i");
+    return re.test(lower);
+  }
+  if (!lower.includes(term)) return false;
+  if (!thaiSegmenter) return true;
+  // accept when the term is a segmented word, or starts one (นม matches นมผง, not ขนม)
+  for (const seg of thaiSegmenter.segment(lower)) {
+    if (seg.segment === term || seg.segment.startsWith(term)) return true;
+  }
+  // multi-word terms (e.g. น้ำปลา may segment as น้ำ + ปลา): check the raw
+  // occurrence begins at a word boundary
+  const starts = new Set();
+  for (const seg of thaiSegmenter.segment(lower)) starts.add(seg.index);
+  let idx = lower.indexOf(term);
+  while (idx !== -1) {
+    if (starts.has(idx)) return true;
+    idx = lower.indexOf(term, idx + 1);
+  }
+  return false;
+}
+
 /* Returns [{allergenLabel, matchedTerms:[...]}] for the user's allergens found in text */
 function findMatches(text) {
   const lower = text.toLowerCase();
@@ -299,8 +346,7 @@ function findMatches(text) {
   const checkTerms = (label, terms) => {
     const matched = [];
     for (const term of terms) {
-      const re = new RegExp(`(^|[^a-z])${escapeRegex(term)}([^a-z]|$)`, "i");
-      if (re.test(lower)) matched.push(term);
+      if (termFoundIn(lower, term)) matched.push(term);
     }
     // keep only the most specific matches for display (drop terms contained in longer matches)
     const unique = matched.filter(t => !matched.some(o => o !== t && o.includes(t)));
@@ -385,12 +431,35 @@ function gaugeHtml(pct, level) {
   return `
     <div class="gauge">
       <div class="gauge-top">
-        <span class="gauge-pct">${pct}%</span>
+        <span class="gauge-pct" data-target="${pct}">0%</span>
         <span class="gauge-label">${label}</span>
       </div>
-      <div class="gauge-bar"><span class="gauge-needle" style="left:${pct}%"></span></div>
+      <div class="gauge-bar"><span class="gauge-needle" style="left:0%"></span></div>
       <div class="gauge-scale"><span>0% safe</span><span>50%</span><span>100% danger</span></div>
     </div>`;
+}
+
+/* Animate the needle and the % counting up after the gauge is in the DOM */
+function animateGauge(container) {
+  const pctEl = container.querySelector(".gauge-pct");
+  const needle = container.querySelector(".gauge-needle");
+  if (!pctEl || !needle) return;
+  const target = parseInt(pctEl.dataset.target, 10);
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) {
+    pctEl.textContent = target + "%";
+    needle.style.left = target + "%";
+    return;
+  }
+  requestAnimationFrame(() => { needle.style.left = target + "%"; });
+  const t0 = performance.now();
+  const dur = 600;
+  const tick = (t) => {
+    const p = Math.min(1, (t - t0) / dur);
+    pctEl.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))) + "%";
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
 }
 
 function highlightTerms(text, terms) {
@@ -454,7 +523,54 @@ function checkIngredients(extra = null) {
     <p class="fine-print">The % is an estimate from the label text${extra ? " and the Open Food Facts database" : ""} —
     labels can be wrong or incomplete. If your allergy is severe, treat anything above 0% with care.</p>`;
   result.classList.remove("hidden");
+  animateGauge(result);
+  addHistory({
+    name: extra?.productName || text.slice(0, 60) + (text.length > 60 ? "…" : ""),
+    pct: risk.pct,
+    level: risk.level,
+    at: Date.now()
+  });
   result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+/* ============ Scan history ============ */
+const HISTORY_KEY = "allergyguard-history-v1";
+
+function loadHistory() {
+  try {
+    const h = JSON.parse(localStorage.getItem(HISTORY_KEY));
+    return Array.isArray(h) ? h : [];
+  } catch (e) { return []; }
+}
+
+function addHistory(entry) {
+  const h = loadHistory();
+  h.unshift(entry);
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, 10))); } catch (e) { /* storage blocked */ }
+  renderHistory();
+}
+
+function clearHistory() {
+  try { localStorage.removeItem(HISTORY_KEY); } catch (e) { /* storage blocked */ }
+  renderHistory();
+}
+
+function renderHistory() {
+  const card = $("history-card");
+  const list = $("history-list");
+  const h = loadHistory();
+  card.hidden = h.length === 0;
+  list.innerHTML = "";
+  for (const e of h) {
+    const row = document.createElement("div");
+    row.className = `history-item ${e.level}`;
+    const when = new Date(e.at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    row.innerHTML = `
+      <span class="history-pct">${e.pct}%</span>
+      <span class="history-name">${escapeHtml(e.name)}</span>
+      <span class="history-time">${when}</span>`;
+    list.appendChild(row);
+  }
 }
 
 /* ============ Barcode lookup (Open Food Facts) ============ */
@@ -491,6 +607,52 @@ async function lookupBarcode(code) {
     });
   } catch (e) {
     setBarcodeStatus("Couldn't reach the product database (no internet, or blocked in this preview). Paste the ingredients from the package instead.", true);
+  }
+}
+
+/* ============ Photo-of-label OCR (Tesseract.js, loaded on demand) ============ */
+let tesseractLoading = null;
+
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve();
+  if (tesseractLoading) return tesseractLoading;
+  tesseractLoading = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+    s.onload = resolve;
+    s.onerror = () => { tesseractLoading = null; reject(new Error("load failed")); };
+    document.head.appendChild(s);
+  });
+  return tesseractLoading;
+}
+
+async function scanLabelPhoto(file) {
+  if (!file) return;
+  setBarcodeStatus("Loading text reader (first time takes a moment)…");
+  try {
+    await loadTesseract();
+  } catch (e) {
+    setBarcodeStatus("Couldn't load the text reader (no internet, or blocked in this preview). Type the ingredients instead.", true);
+    return;
+  }
+  try {
+    setBarcodeStatus("Reading the label… 0%");
+    const { data } = await Tesseract.recognize(file, "eng", {
+      logger: (m) => {
+        if (m.status === "recognizing text")
+          setBarcodeStatus(`Reading the label… ${Math.round(m.progress * 100)}%`);
+      }
+    });
+    const text = (data.text || "").replace(/\s+/g, " ").trim();
+    if (!text) {
+      setBarcodeStatus("Couldn't read any text — try a closer, sharper photo with good light.", true);
+      return;
+    }
+    $("ingredient-input").value = text;
+    setBarcodeStatus("Text read from the photo — check it looks right, then see the score below.");
+    checkIngredients();
+  } catch (e) {
+    setBarcodeStatus("Couldn't read the photo — try a closer, sharper shot, or type the ingredients.", true);
   }
 }
 
@@ -629,6 +791,18 @@ function init() {
   $("barcode-input").addEventListener("keydown", e => {
     if (e.key === "Enter") { e.preventDefault(); lookupBarcode(e.target.value); }
   });
+  $("photo-btn").addEventListener("click", () => $("photo-input").click());
+  $("photo-input").addEventListener("change", e => {
+    scanLabelPhoto(e.target.files[0]);
+    e.target.value = "";
+  });
+  $("clear-history-btn").addEventListener("click", clearHistory);
+  renderHistory();
+
+  // Installable app + offline support when served over https/localhost
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
+    navigator.serviceWorker.register("sw.js").catch(() => { /* offline mode unavailable */ });
+  }
 
   const saved = loadProfile();
   if (saved) {
