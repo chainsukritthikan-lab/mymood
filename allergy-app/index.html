@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0e9f6e">
+  <title>AllergyGuard — Check food for your allergies</title>
+  <meta name="description" content="Set up your allergy profile, scan ingredient labels, and look up common foods to stay safe from food allergens.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="logo">
+      <span class="logo-icon">🛡️</span>
+      <div>
+        <h1>AllergyGuard</h1>
+        <p class="tagline">Check before you eat</p>
+      </div>
+    </div>
+    <button id="edit-profile-btn" class="ghost-btn" title="Edit my allergies">⚙️ My allergies</button>
+  </header>
+
+  <!-- ============ ONBOARDING / PROFILE ============ -->
+  <section id="profile-screen" class="screen">
+    <div class="card">
+      <h2>What are you allergic to?</h2>
+      <p class="muted">Select everything that applies. We'll warn you whenever a food or ingredient list contains it — including hidden names like <em>casein</em> (milk) or <em>albumin</em> (egg).</p>
+
+      <div id="allergen-grid" class="allergen-grid"></div>
+
+      <div class="custom-allergen">
+        <label for="custom-input">Other allergy (e.g. kiwi, strawberry):</label>
+        <div class="custom-row">
+          <input type="text" id="custom-input" placeholder="Type an allergen and press Add" maxlength="40">
+          <button id="add-custom-btn" class="secondary-btn">Add</button>
+        </div>
+        <div id="custom-list" class="chip-row"></div>
+      </div>
+
+      <button id="save-profile-btn" class="primary-btn">Save my profile →</button>
+    </div>
+  </section>
+
+  <!-- ============ MAIN APP ============ -->
+  <main id="main-screen" class="screen hidden">
+
+    <div id="profile-summary" class="profile-summary"></div>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="scan" role="tab">📋 Check a label</button>
+      <button class="tab" data-tab="foods" role="tab">🍜 Food lookup</button>
+      <button class="tab" data-tab="learn" role="tab">📖 Hidden names</button>
+    </nav>
+
+    <!-- ---- TAB: Ingredient scanner ---- -->
+    <section id="tab-scan" class="tab-panel">
+      <div class="card">
+        <h2>Paste an ingredient list</h2>
+        <p class="muted">Copy the ingredients from a package label (or type what's in a dish) and we'll check it against your allergies.</p>
+        <textarea id="ingredient-input" rows="5" placeholder="e.g. Wheat flour, sugar, palm oil, whey powder, soy lecithin, may contain traces of peanuts"></textarea>
+        <button id="check-btn" class="primary-btn">Check ingredients</button>
+        <div id="scan-result" class="result hidden" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ---- TAB: Food lookup ---- -->
+    <section id="tab-foods" class="tab-panel hidden">
+      <div class="card">
+        <h2>Common foods &amp; dishes</h2>
+        <p class="muted">Typical allergens in popular foods. Recipes vary — always confirm with the cook or the label.</p>
+        <input type="search" id="food-search" placeholder="Search foods… (e.g. pad thai, pancake)">
+        <div id="food-list" class="food-list"></div>
+      </div>
+    </section>
+
+    <!-- ---- TAB: Hidden names ---- -->
+    <section id="tab-learn" class="tab-panel hidden">
+      <div class="card">
+        <h2>Hidden allergen names</h2>
+        <p class="muted">Allergens often hide behind scientific or industrial names on labels. These are the ones this app watches for you.</p>
+        <div id="learn-list" class="learn-list"></div>
+      </div>
+    </section>
+
+    <div class="card emergency-card">
+      <h2>🚨 If a reaction happens</h2>
+      <ul>
+        <li>Trouble breathing, swelling of lips/tongue/throat, dizziness, or widespread hives can be <strong>anaphylaxis — call emergency services immediately</strong>.</li>
+        <li>Use an epinephrine auto-injector (EpiPen) right away if one is prescribed. Don't wait to see if it gets better.</li>
+        <li>Lie the person down with legs raised (or sitting up if breathing is hard) and stay with them.</li>
+      </ul>
+    </div>
+
+    <footer class="disclaimer">
+      ⚠️ AllergyGuard is an educational helper, not medical advice. Ingredient databases and label text can be incomplete or wrong — always read the actual package, ask about cross-contamination, and follow your doctor's guidance.
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

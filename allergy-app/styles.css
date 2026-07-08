@@ -1,0 +1,301 @@
+/* ============ AllergyGuard styles ============ */
+:root {
+  --green: #0e9f6e;
+  --green-dark: #057a55;
+  --green-light: #def7ec;
+  --red: #e02424;
+  --red-light: #fde8e8;
+  --amber: #c27803;
+  --amber-light: #fdf6b2;
+  --ink: #1f2a37;
+  --muted: #6b7280;
+  --bg: #f4f7f6;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --radius: 14px;
+  font-size: 16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.55;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+/* ---- Header ---- */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 0 10px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon { font-size: 2rem; }
+.app-header h1 { font-size: 1.35rem; letter-spacing: -0.01em; }
+.tagline { color: var(--muted); font-size: 0.85rem; }
+
+/* ---- Cards & screens ---- */
+.screen { margin-top: 8px; }
+.hidden { display: none !important; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.card h2 { font-size: 1.1rem; margin-bottom: 6px; }
+.muted { color: var(--muted); font-size: 0.9rem; margin-bottom: 14px; }
+
+/* ---- Buttons ---- */
+.primary-btn {
+  display: block;
+  width: 100%;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 14px;
+  transition: background 0.15s;
+}
+.primary-btn:hover { background: var(--green-dark); }
+
+.secondary-btn {
+  background: var(--green-light);
+  color: var(--green-dark);
+  border: 1px solid var(--green);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ghost-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.ghost-btn:hover { background: var(--card); }
+
+/* ---- Allergen selection grid ---- */
+.allergen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.allergen-tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  padding: 12px 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: border-color 0.12s, background 0.12s;
+  text-align: left;
+}
+.allergen-tile .emoji { font-size: 1.3rem; }
+.allergen-tile.selected {
+  border-color: var(--green);
+  background: var(--green-light);
+}
+.allergen-tile.selected::after {
+  content: "✓";
+  margin-left: auto;
+  color: var(--green-dark);
+  font-weight: 700;
+}
+
+/* ---- Custom allergens ---- */
+.custom-allergen label { font-size: 0.9rem; font-weight: 600; }
+.custom-row { display: flex; gap: 8px; margin: 8px 0; }
+.custom-row input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 1rem;
+}
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-light);
+  color: var(--green-dark);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.chip button {
+  background: none;
+  border: none;
+  color: var(--green-dark);
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* ---- Profile summary bar ---- */
+.profile-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 14px;
+  font-size: 0.9rem;
+}
+.profile-summary .label { color: var(--muted); font-weight: 600; }
+.profile-summary .chip { background: var(--red-light); color: var(--red); }
+
+/* ---- Tabs ---- */
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+}
+.tab {
+  flex: 1;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+.tab.active {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+/* ---- Scanner ---- */
+textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.result { margin-top: 16px; border-radius: 12px; padding: 16px; }
+.result.danger { background: var(--red-light); border: 1px solid var(--red); }
+.result.warning { background: var(--amber-light); border: 1px solid var(--amber); }
+.result.safe { background: var(--green-light); border: 1px solid var(--green); }
+.result h3 { font-size: 1.05rem; margin-bottom: 8px; }
+.result.danger h3 { color: var(--red); }
+.result.warning h3 { color: var(--amber); }
+.result.safe h3 { color: var(--green-dark); }
+.result ul { margin: 6px 0 0 18px; }
+.result li { margin-bottom: 4px; font-size: 0.92rem; }
+.match-term { font-weight: 700; }
+.result .fine-print { font-size: 0.8rem; color: var(--muted); margin-top: 10px; }
+
+mark {
+  background: #fecaca;
+  border-radius: 4px;
+  padding: 0 2px;
+}
+
+/* ---- Food lookup ---- */
+#food-search {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 1rem;
+  margin-bottom: 12px;
+}
+.food-list { display: flex; flex-direction: column; gap: 8px; }
+.food-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.food-item.unsafe { border-color: var(--red); background: var(--red-light); }
+.food-item.safe-ish { border-color: var(--border); }
+.food-name { font-weight: 600; margin-right: auto; }
+.food-flag {
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: var(--bg);
+  color: var(--muted);
+}
+.food-flag.hit { background: var(--red); color: #fff; }
+.food-verdict { width: 100%; font-size: 0.82rem; margin-top: 2px; }
+.food-verdict.bad { color: var(--red); font-weight: 600; }
+.food-verdict.ok { color: var(--green-dark); }
+
+/* ---- Hidden-names learn list ---- */
+.learn-list { display: flex; flex-direction: column; gap: 10px; }
+.learn-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.learn-item.mine { border-color: var(--green); background: var(--green-light); }
+.learn-item h3 { font-size: 0.98rem; margin-bottom: 4px; }
+.learn-item p { font-size: 0.85rem; color: var(--muted); }
+.learn-item .you-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--green-dark);
+  border: 1px solid var(--green);
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ---- Emergency & disclaimer ---- */
+.emergency-card { border-color: var(--red); }
+.emergency-card h2 { color: var(--red); }
+.emergency-card ul { margin: 8px 0 0 18px; }
+.emergency-card li { margin-bottom: 8px; font-size: 0.92rem; }
+
+.disclaimer {
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding: 4px 8px 0;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .allergen-grid { grid-template-columns: repeat(2, 1fr); }
+  .tab { font-size: 0.8rem; padding: 9px 8px; }
+}
