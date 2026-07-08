@@ -182,6 +182,162 @@ const TRACE_RE = /may contain|traces of|produced in a (factory|facility)|same (f
 
 const STORAGE_KEY = "allergyguard-profile-v1";
 
+/* ============ Monetization ============
+   Free plan: N scans per day (dish photo, barcode, label photo).
+   Manual paste-and-check always stays free.
+   To charge real money: create Stripe Payment Links (dashboard.stripe.com →
+   Payment Links) and paste the URLs below. With no link set, checkout runs
+   in demo mode and unlocks Pro instantly. NOTE: verifying payments for real
+   requires a small backend — a Payment Link alone can't prove who paid. */
+const PAYWALL = {
+  freeScansPerDay: 3,
+  plans: {
+    monthly: { label: "Monthly", price: "$2.99", per: "/month", link: "" },
+    lifetime: { label: "Lifetime", price: "$19.99", per: "once", link: "" }
+  }
+};
+const PRO_KEY = "allergyguard-pro-v1";
+const CREDITS_KEY = "allergyguard-credits-v1";
+
+function isPro() {
+  try { return JSON.parse(localStorage.getItem(PRO_KEY))?.active === true; }
+  catch (e) { return false; }
+}
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+function scansUsedToday() {
+  try {
+    const c = JSON.parse(localStorage.getItem(CREDITS_KEY));
+    return c && c.day === todayKey() ? c.used : 0;
+  } catch (e) { return 0; }
+}
+
+function scansLeft() {
+  return Math.max(0, PAYWALL.freeScansPerDay - scansUsedToday());
+}
+
+function consumeScan() {
+  if (isPro()) return;
+  try {
+    localStorage.setItem(CREDITS_KEY, JSON.stringify({ day: todayKey(), used: scansUsedToday() + 1 }));
+  } catch (e) { /* storage blocked — stays free-tier in memory */ }
+  updateScanMeter();
+}
+
+/* Call before starting any scan. Returns true if allowed; shows the paywall if not. */
+function canScan() {
+  if (isPro() || scansLeft() > 0) return true;
+  openPaywall();
+  return false;
+}
+
+function activatePro(plan) {
+  try { localStorage.setItem(PRO_KEY, JSON.stringify({ active: true, plan, at: Date.now() })); }
+  catch (e) { window.__proInMemory = true; }
+  updateScanMeter();
+  renderProBadge();
+}
+
+function updateScanMeter() {
+  const el = $("scan-meter");
+  if (!el) return;
+  if (isPro() || window.__proInMemory) {
+    el.innerHTML = `<span class="meter-pro">⭐ Pro — unlimited scans</span>`;
+  } else {
+    const left = scansLeft();
+    el.innerHTML = left > 0
+      ? `<span class="meter-free">⚡ ${left} free scan${left === 1 ? "" : "s"} left today</span>
+         <button class="meter-upgrade" id="meter-upgrade-btn">Go Pro</button>`
+      : `<span class="meter-out">🔒 Free scans used up for today</span>
+         <button class="meter-upgrade" id="meter-upgrade-btn">Go Pro</button>`;
+    const btn = $("meter-upgrade-btn");
+    if (btn) btn.addEventListener("click", openPaywall);
+  }
+}
+
+function renderProBadge() {
+  const badge = $("pro-badge");
+  if (badge) badge.classList.toggle("hidden", !(isPro() || window.__proInMemory));
+}
+
+function renderPaywallBody() {
+  const p = PAYWALL.plans;
+  $("paywall-body").innerHTML = `
+    <div class="paywall-crown">👑</div>
+    <h2>AllergyGuard Pro</h2>
+    <p class="muted">You get ${PAYWALL.freeScansPerDay} free scans a day. Go Pro for unlimited protection.</p>
+    <ul class="paywall-features">
+      <li>🍽️ Unlimited food photo recognition</li>
+      <li>📷 Unlimited barcode lookups</li>
+      <li>🔍 Unlimited label reading (OCR)</li>
+      <li>🇹🇭 English + Thai label support</li>
+      <li>❤️ Supports keeping the app alive</li>
+    </ul>
+    <div class="paywall-plans">
+      <button class="plan-btn" data-plan="monthly">
+        <span class="plan-name">${p.monthly.label}</span>
+        <span class="plan-price">${p.monthly.price}</span>
+        <span class="plan-per">${p.monthly.per}</span>
+      </button>
+      <button class="plan-btn featured" data-plan="lifetime">
+        <span class="plan-badge">Best value</span>
+        <span class="plan-name">${p.lifetime.label}</span>
+        <span class="plan-price">${p.lifetime.price}</span>
+        <span class="plan-per">${p.lifetime.per}</span>
+      </button>
+    </div>
+    <p class="paywall-fine">Checking pasted ingredient lists is always free. Pro applies to this device.</p>`;
+  document.querySelectorAll("[data-plan]").forEach(btn =>
+    btn.addEventListener("click", () => startCheckout(btn.dataset.plan)));
+}
+
+function openPaywall() {
+  renderPaywallBody();
+  $("paywall").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function closePaywall() {
+  $("paywall").classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+function startCheckout(planKey) {
+  const plan = PAYWALL.plans[planKey];
+  const body = $("paywall-body");
+  if (plan.link) {
+    // Real payment page opens in a new tab; user confirms afterwards.
+    window.open(plan.link, "_blank", "noopener");
+    body.innerHTML = `
+      <div class="paywall-crown">💳</div>
+      <h2>Finish paying in the new tab</h2>
+      <p class="muted">Complete the ${plan.label} checkout there, then come back and activate.</p>
+      <button class="primary-btn" id="paywall-activate">I've paid — activate Pro</button>
+      <p class="paywall-fine">Activation is on your honor until a payment server is connected.</p>`;
+    $("paywall-activate").addEventListener("click", () => { activatePro(planKey); showProWelcome(); });
+  } else {
+    // Demo checkout: no Stripe link configured yet.
+    body.innerHTML = `
+      <div class="paywall-crown">⏳</div>
+      <h2>Processing…</h2>
+      <p class="muted">Demo checkout — no real charge. Paste your Stripe Payment Link in app.js to charge real money.</p>`;
+    setTimeout(() => { activatePro(planKey); showProWelcome(); }, 900);
+  }
+}
+
+function showProWelcome() {
+  $("paywall-body").innerHTML = `
+    <div class="paywall-crown">🎉</div>
+    <h2>Welcome to Pro!</h2>
+    <p class="muted">Unlimited dish, barcode and label scans are now unlocked on this device.</p>
+    <button class="primary-btn" id="paywall-done">Start scanning</button>`;
+  $("paywall-done").addEventListener("click", closePaywall);
+}
+
 /* ---- State ---- */
 let profile = { selected: [], custom: [] };
 let editingSelected = new Set();
@@ -958,22 +1114,37 @@ function init() {
   });
   $("check-btn").addEventListener("click", () => checkIngredients());
   $("food-search").addEventListener("input", e => renderFoodList(e.target.value));
-  $("camera-btn").addEventListener("click", startCamera);
+  $("camera-btn").addEventListener("click", () => {
+    if (!canScan()) return;
+    consumeScan();
+    startCamera();
+  });
   $("camera-stop-btn").addEventListener("click", stopCamera);
-  $("barcode-btn").addEventListener("click", () => lookupBarcode($("barcode-input").value));
+  const gatedLookup = (value) => {
+    if (!canScan()) return;
+    consumeScan();
+    lookupBarcode(value);
+  };
+  $("barcode-btn").addEventListener("click", () => gatedLookup($("barcode-input").value));
   $("barcode-input").addEventListener("keydown", e => {
-    if (e.key === "Enter") { e.preventDefault(); lookupBarcode(e.target.value); }
+    if (e.key === "Enter") { e.preventDefault(); gatedLookup(e.target.value); }
   });
-  $("photo-btn").addEventListener("click", () => $("photo-input").click());
+  $("photo-btn").addEventListener("click", () => { if (canScan()) $("photo-input").click(); });
   $("photo-input").addEventListener("change", e => {
-    scanLabelPhoto(e.target.files[0]);
+    if (e.target.files[0]) { consumeScan(); scanLabelPhoto(e.target.files[0]); }
     e.target.value = "";
   });
-  $("dish-btn").addEventListener("click", () => $("dish-input").click());
+  $("dish-btn").addEventListener("click", () => { if (canScan()) $("dish-input").click(); });
   $("dish-input").addEventListener("change", e => {
-    scanDishPhoto(e.target.files[0]);
+    if (e.target.files[0]) { consumeScan(); scanDishPhoto(e.target.files[0]); }
     e.target.value = "";
   });
+
+  // Paywall
+  $("paywall-close").addEventListener("click", closePaywall);
+  $("paywall").addEventListener("click", e => { if (e.target === $("paywall")) closePaywall(); });
+  updateScanMeter();
+  renderProBadge();
   $("clear-history-btn").addEventListener("click", clearHistory);
   renderHistory();
 

@@ -1,6 +1,6 @@
 /* AllergyGuard service worker: cache the app shell so it works offline.
    Barcode lookups and OCR still need a connection. */
-const CACHE = "allergyguard-v3";
+const CACHE = "allergyguard-v4";
 const SHELL = ["./", "index.html", "styles.css", "app.js", "manifest.json", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {

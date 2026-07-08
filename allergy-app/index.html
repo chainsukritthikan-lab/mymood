@@ -20,7 +20,10 @@
         <p class="tagline">Know before you bite</p>
       </div>
     </div>
-    <button id="edit-profile-btn" class="ghost-btn" title="Edit my allergies">⚙️ My allergies</button>
+    <div class="header-actions">
+      <span id="pro-badge" class="pro-badge hidden">⭐ PRO</span>
+      <button id="edit-profile-btn" class="ghost-btn" title="Edit my allergies">⚙️ My allergies</button>
+    </div>
   </header>
 
   <!-- ============ ONBOARDING / PROFILE ============ -->
@@ -60,6 +63,7 @@
       <div class="card">
         <h2>Scan your food</h2>
         <p class="muted">Photograph the dish itself and we'll recognize it, scan the barcode to fetch ingredients from the Open Food Facts database, or photograph the ingredient label and we'll read it.</p>
+        <div id="scan-meter" class="scan-meter"></div>
         <div class="scan-buttons">
           <button id="dish-btn" class="secondary-btn">🍽️ Photo of food</button>
           <button id="camera-btn" class="secondary-btn">📷 Scan barcode</button>
@@ -127,6 +131,14 @@
       ⚠️ AllergyGuard is an educational helper, not medical advice. Ingredient databases and label text can be incomplete or wrong — always read the actual package, ask about cross-contamination, and follow your doctor's guidance.
     </footer>
   </main>
+
+  <!-- ============ PAYWALL ============ -->
+  <div id="paywall" class="paywall-overlay hidden" role="dialog" aria-modal="true" aria-label="Upgrade to AllergyGuard Pro">
+    <div class="paywall-card">
+      <button id="paywall-close" class="paywall-close" aria-label="Close">✕</button>
+      <div id="paywall-body"></div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

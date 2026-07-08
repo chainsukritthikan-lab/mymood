@@ -606,6 +606,154 @@ mark {
 .history-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .history-time { color: var(--muted); font-size: 0.75rem; white-space: nowrap; }
 
+/* ---- Monetization: meter, badge, paywall ---- */
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.pro-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #3b2a00;
+  background: linear-gradient(180deg, #ffd76a, #f2b135);
+  border-radius: 999px;
+  padding: 5px 11px;
+  box-shadow: 0 2px 8px rgba(242, 177, 53, 0.4);
+}
+
+.scan-meter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 9px 13px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.scan-meter:empty { display: none; }
+.meter-free { color: var(--brand-strong); }
+.meter-out { color: var(--danger); }
+.meter-pro { color: var(--brand-strong); }
+.meter-upgrade {
+  background: linear-gradient(180deg, #ffd76a, #f2b135);
+  color: #3b2a00;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(242, 177, 53, 0.35);
+  transition: transform 0.12s ease;
+}
+.meter-upgrade:active { transform: scale(0.95); }
+
+.paywall-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 20, 14, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px;
+}
+.paywall-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 28px 24px 24px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+  text-align: center;
+  animation: paywall-rise 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+@keyframes paywall-rise {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: none; }
+}
+.paywall-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: var(--bg);
+  border: none;
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  font-size: 0.9rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+.paywall-crown { font-size: 2.6rem; margin-bottom: 6px; }
+.paywall-card h2 {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+.paywall-card .muted { margin-bottom: 14px; }
+.paywall-features {
+  list-style: none;
+  text-align: left;
+  margin: 0 auto 16px;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+.paywall-plans { display: flex; gap: 10px; margin-bottom: 12px; }
+.plan-btn {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 10px 13px;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+.plan-btn:hover { border-color: var(--brand); }
+.plan-btn:active { transform: scale(0.97); }
+.plan-btn.featured { border-color: var(--brand); background: var(--brand-tint); }
+.plan-badge {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: linear-gradient(180deg, #ffd76a, #f2b135);
+  color: #3b2a00;
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+.plan-name { font-size: 0.8rem; font-weight: 700; color: var(--muted); }
+.plan-price {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.plan-per { font-size: 0.75rem; color: var(--muted); }
+.paywall-fine { font-size: 0.75rem; color: var(--muted); }
+
 /* ---- Emergency & disclaimer ---- */
 .emergency-card { border-left: 5px solid var(--danger); }
 .emergency-card h2 { color: var(--danger); }
